@@ -15,6 +15,7 @@ canvas.config(bg="black")
 canvas.pack()
 canvas.focus_set()
 time=0
+stars=[]
 meteors=[] 
 explosions=[]
 max_time_explosion=50
@@ -46,10 +47,6 @@ class PosRad:
     self.y=y
     self.rad=rad
 
-  def add(dx,dy):
-    self.x+=dx
-    self.y+=dy
-
   def in_collision(self,p2):
     dx=self.x-p2.x     # difference in x
     dy=self.y-p2.y     # difference in y
@@ -79,7 +76,24 @@ class Explosion:
         color="red"
       canvas.create_line(self.posrad.x,   self.posrad.y,
                          self.posrad.x+x2,self.posrad.y+y2, fill=color, width=2)
-          
+
+class Star:
+
+  def __init__(self,x,y):
+    self.posrad=PosRad(x,y,1)
+    min_speed=0.5
+    max_speed=1.5
+    self.speed=random.uniform(min_speed,max_speed)
+
+  def time_step(self):
+    self.posrad.x-=self.speed
+    if self.posrad.x<0:
+      stars.remove(self)
+    
+  def draw(self,canvas):
+    canvas.create_line(self.posrad.x, self.posrad.y,
+                       self.posrad.x+1, self.posrad.y, fill="white", width=1)
+  
 class Meteor:
 
   def __init__(self,x,y):
@@ -162,8 +176,13 @@ ship=Ship(canvas_width/2,canvas_height/2)
 def time_step():
     global time
     canvas.delete("all") # remove all previous drawings
-    if random.randint(0,50)==0:
+    if random.randint(0,40)==0:
       meteors.append( Meteor(canvas.winfo_width(),random.randint(0,canvas.winfo_height())) )
+    if random.randint(0,20)==0:
+      stars.append( Star(canvas.winfo_width(),random.randint(0,canvas.winfo_height())) )
+    for i in stars:
+      i.time_step()
+      i.draw(canvas)
     ship.time_step()
     ship.draw(canvas)      
     for i in meteors:
