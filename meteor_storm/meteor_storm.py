@@ -1,7 +1,4 @@
-# testing tkinter, for docs see: 
-#   https://tkdocs.com/tutorial/index.html
-#   http://effbot.org/tkinterbook/canvas.htm
-#
+# Meteor Storm game
 import tkinter as tk
 import random
 
@@ -18,9 +15,6 @@ time=0
 stars=[]
 meteors=[] 
 explosions=[]
-
-def rgb(r,g,b):
-  return "#%02x%02x%02x" % (r,g,b)
 
 class Keyboard:
 
@@ -192,8 +186,8 @@ def time_step():
     for i in stars:
       i.time_step()
       i.draw(canvas)
+    ship.draw(canvas)
     ship.time_step()
-    ship.draw(canvas)      
     for i in meteors:
       i.time_step()
       i.draw(canvas)
