@@ -18,8 +18,6 @@ time=0
 stars=[]
 meteors=[] 
 explosions=[]
-max_time_explosion=50
-air_resistance=0.995
 
 def rgb(r,g,b):
   return "#%02x%02x%02x" % (r,g,b)
@@ -54,19 +52,22 @@ class PosRad:
     return dx*dx+dy*dy<sr*sr # Pythagoras
 
 class Explosion:
-
+  size=200
+  max_time_explosion=20
+  nr_lines=20
+  
   def __init__(self,x,y):
-    self.posrad=PosRad(x,y,200)
+    self.posrad=PosRad(x,y,Explosion.size)
     self.time=0
 
   def time_step(self):
     self.time+=1
-    if self.time>max_time_explosion:
+    if self.time>Explosion.max_time_explosion:
       explosions.remove(self)
 
   def draw(self,canvas):
-    for i in range(20):
-      length=int(self.posrad.rad*self.time/max_time_explosion)
+    for i in range(Explosion.nr_lines):
+      length=int(self.posrad.rad*self.time/Explosion.max_time_explosion)
       x2=random.randint(-length,length)
       y2=random.randint(-length,length)
       color=""
@@ -78,12 +79,12 @@ class Explosion:
                          self.posrad.x+x2,self.posrad.y+y2, fill=color, width=2)
 
 class Star:
-
+  min_speed=1
+  max_speed=3
+  
   def __init__(self,x,y):
     self.posrad=PosRad(x,y,1)
-    min_speed=0.5
-    max_speed=1.5
-    self.speed=random.uniform(min_speed,max_speed)
+    self.speed=random.uniform(Star.min_speed,Star.max_speed)
 
   def time_step(self):
     self.posrad.x-=self.speed
@@ -92,16 +93,18 @@ class Star:
     
   def draw(self,canvas):
     canvas.create_line(self.posrad.x, self.posrad.y,
-                       self.posrad.x+1, self.posrad.y, fill="white", width=1)
+                       self.posrad.x+1, self.posrad.y, fill="white")
   
 class Meteor:
-
+  min_speed=3
+  max_speed=9
+  min_size=6
+  size=10
+  
   def __init__(self,x,y):
-    min_speed=1
-    max_speed=3
-    self.speed=random.uniform(min_speed,max_speed)
-    r=(self.speed-min_speed)/(max_speed-min_speed)
-    self.posrad=PosRad(x,y,6+10-r*10)
+    self.speed=random.uniform(Meteor.min_speed,Meteor.max_speed)
+    r=(self.speed - Meteor.min_speed) / (Meteor.max_speed - Meteor.min_speed)
+    self.posrad=PosRad(x,y,Meteor.min_size + Meteor.size - r * Meteor.size)
     self.color="green"
 
   def time_step(self):
@@ -115,35 +118,39 @@ class Meteor:
                        fill=self.color, outline="white")
 
 class Ship:
-
+  size=20
+  air_resistance=0.995
+  speed=0.2
+  wind=0.1
+  collision_bump=6
+  
   def __init__(self,x,y):
-    self.posrad=PosRad(x,y,20)
-    self.speed=0.02
+    self.posrad=PosRad(x,y,Ship.size)
     self.vx=0
     self.vy=0
 
   def time_step(self):
     if keyboard.is_down("Left") or keyboard.is_down("z"):
-      self.vx-=self.speed
+      self.vx-=Ship.speed
       canvas.create_line(self.posrad.x+self.posrad.rad   , self.posrad.y,
                          self.posrad.x+self.posrad.rad+20, self.posrad.y, fill="red", width=10)
     if keyboard.is_down("Right") or keyboard.is_down("x"):
-      self.vx+=self.speed
+      self.vx+=Ship.speed
       canvas.create_line(self.posrad.x-self.posrad.rad   , self.posrad.y,
                          self.posrad.x-self.posrad.rad-20, self.posrad.y, fill="red", width=10)
     if keyboard.is_down("Up") or keyboard.is_down("apostrophe"):
-      self.vy-=self.speed
+      self.vy-=Ship.speed
       canvas.create_line(self.posrad.x , self.posrad.y+self.posrad.rad,
                          self.posrad.x , self.posrad.y+self.posrad.rad+20, fill="red", width=10)
     if keyboard.is_down("Down") or keyboard.is_down("slash"):
-      self.vy+=self.speed
+      self.vy+=Ship.speed
       canvas.create_line(self.posrad.x , self.posrad.y-self.posrad.rad,
                          self.posrad.x , self.posrad.y-self.posrad.rad-20, fill="red", width=10)
-    self.vx-=0.01 # wind
+    self.vx-=Ship.wind
     self.posrad.x+=self.vx
     self.posrad.y+=self.vy
-    self.vx*=air_resistance
-    self.vy*=air_resistance
+    self.vx*=Ship.air_resistance
+    self.vy*=Ship.air_resistance
     if self.posrad.x<0:
       self.posrad.x=0
       self.vx*=-1
@@ -167,19 +174,21 @@ class Ship:
       if self.posrad.in_collision(i.posrad):
         explosions.append(Explosion(i.posrad.x,i.posrad.y))
         meteors.remove(i)
-        self.vx-=3
+        self.vx-=Ship.collision_bump
 
 # globals
 keyboard=Keyboard()
 ship=Ship(canvas_width/2,canvas_height/2)
-    
+avr_star_time=10
+avr_meteor_time=15
+
 def time_step():
     global time
     canvas.delete("all") # remove all previous drawings
-    if random.randint(0,40)==0:
-      meteors.append( Meteor(canvas.winfo_width(),random.randint(0,canvas.winfo_height())) )
-    if random.randint(0,20)==0:
+    if random.randint(0,avr_star_time)==0:
       stars.append( Star(canvas.winfo_width(),random.randint(0,canvas.winfo_height())) )
+    if random.randint(0,avr_meteor_time)==0:
+      meteors.append( Meteor(canvas.winfo_width(),random.randint(0,canvas.winfo_height())) )
     for i in stars:
       i.time_step()
       i.draw(canvas)
@@ -193,7 +202,7 @@ def time_step():
       i.draw(canvas)
     ship.collision_detect(meteors)
     time+=1
-    root.after(2, time_step)
+    root.after(10, time_step)
 
 def key_down(e):
     keyboard.key_down(e.keysym)
@@ -204,6 +213,6 @@ def key_up(e):
     
 root.bind("<KeyPress>", key_down)
 root.bind("<KeyRelease>", key_up)
-root.after(50, time_step)
+root.after(100, time_step)
 root.update()
 root.mainloop()

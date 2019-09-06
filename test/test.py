@@ -46,8 +46,8 @@ def time_step():
             y1=random.randint(0,canvas.winfo_height()-height)
             canvas.create_rectangle(x1, y1, x1+width, y1+height, fill=color, outline="white")
     time+=1
-    root.after(2, time_step)
+    root.after(10, time_step)
     
-root.after(10, time_step)
+root.after(100, time_step)
 root.update()
 root.mainloop()
