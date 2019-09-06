@@ -32,7 +32,7 @@ def time_step():
             y1=random.randint(0,canvas.winfo_height())
             x2=random.randint(0,canvas.winfo_width())
             y2=random.randint(0,canvas.winfo_height())
-            canvas.create_line(x1, y1, x2, y2, fill=color)
+            canvas.create_line(x1, y1, x2, y2, fill=color, width=4)
         elif shape==1:
             width =random.randint(30,100)
             height=random.randint(30,100)
