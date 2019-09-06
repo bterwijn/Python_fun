@@ -18,6 +18,7 @@ time=0
 meteors=[] 
 explosions=[]
 max_time_explosion=50
+air_resistance=0.995
 
 def rgb(r,g,b):
   return "#%02x%02x%02x" % (r,g,b)
@@ -82,8 +83,11 @@ class Explosion:
 class Meteor:
 
   def __init__(self,x,y):
-    self.posrad=PosRad(x,y,10)
-    self.speed=random.uniform(1,3)
+    min_speed=1
+    max_speed=3
+    self.speed=random.uniform(min_speed,max_speed)
+    r=(self.speed-min_speed)/(max_speed-min_speed)
+    self.posrad=PosRad(x,y,6+10-r*10)
 
   def time_step(self):
     self.posrad.x-=self.speed
@@ -99,17 +103,44 @@ class Ship:
 
   def __init__(self,x,y):
     self.posrad=PosRad(x,y,20)
-    self.speed=1
+    self.speed=0.02
+    self.vx=0
+    self.vy=0
 
   def time_step(self):
     if keyboard.is_down("Left"):
-      self.posrad.x-=self.speed
+      self.vx-=self.speed
+      canvas.create_line(self.posrad.x+self.posrad.rad   , self.posrad.y,
+                         self.posrad.x+self.posrad.rad+20, self.posrad.y, fill="red", width=10)
     if keyboard.is_down("Right"):
-      self.posrad.x+=self.speed
+      self.vx+=self.speed
+      canvas.create_line(self.posrad.x-self.posrad.rad   , self.posrad.y,
+                         self.posrad.x-self.posrad.rad-20, self.posrad.y, fill="red", width=10)
     if keyboard.is_down("Up"):
-      self.posrad.y-=self.speed
+      self.vy-=self.speed
+      canvas.create_line(self.posrad.x , self.posrad.y+self.posrad.rad,
+                         self.posrad.x , self.posrad.y+self.posrad.rad+20, fill="red", width=10)
     if keyboard.is_down("Down"):
-      self.posrad.y+=self.speed
+      self.vy+=self.speed
+      canvas.create_line(self.posrad.x , self.posrad.y-self.posrad.rad,
+                         self.posrad.x , self.posrad.y-self.posrad.rad-20, fill="red", width=10)
+    self.vx-=0.01 # wind
+    self.posrad.x+=self.vx
+    self.posrad.y+=self.vy
+    self.vx*=air_resistance
+    self.vy*=air_resistance
+    if self.posrad.x<0:
+      self.posrad.x=0
+      self.vx*=-1
+    if self.posrad.y<0:
+      self.posrad.y=0
+      self.vy*=-1
+    if self.posrad.x>canvas.winfo_width():
+      self.posrad.x=canvas.winfo_width()
+      self.vx*=-1
+    if self.posrad.y>canvas.winfo_width()-self.posrad.rad*10:
+      self.posrad.y=canvas.winfo_width()-self.posrad.rad*10
+      self.vy*=-1
   
   def draw(self,canvas):
     canvas.create_oval(self.posrad.x-self.posrad.rad, self.posrad.y-self.posrad.rad, \
@@ -121,7 +152,7 @@ class Ship:
       if self.posrad.in_collision(i.posrad):
         explosions.append(Explosion(i.posrad.x,i.posrad.y))
         meteors.remove(i)
-
+        self.vx-=3
 
 # globals
 keyboard=Keyboard()
