@@ -154,8 +154,8 @@ class Ship:
     if self.posrad.x>canvas.winfo_width():
       self.posrad.x=canvas.winfo_width()
       self.vx*=-1
-    if self.posrad.y>canvas.winfo_width()-self.posrad.rad*10:
-      self.posrad.y=canvas.winfo_width()-self.posrad.rad*10
+    if self.posrad.y>canvas.winfo_height():
+      self.posrad.y=canvas.winfo_height()
       self.vy*=-1
   
   def draw(self,canvas):
