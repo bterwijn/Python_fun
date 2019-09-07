@@ -26,11 +26,11 @@ def time_step():
         color=rgb(random.randint(0,255), \
                   random.randint(0,255), \
                   random.randint(0,255)) 
-        shape=random.randint(0,3)
+        shape=random.randint(0,4)
         if shape==0:
-            x1=random.randint(0,canvas.winfo_width())
+            x1=random.randint(0,canvas.winfo_width() )
             y1=random.randint(0,canvas.winfo_height())
-            x2=random.randint(0,canvas.winfo_width())
+            x2=random.randint(0,canvas.winfo_width() )
             y2=random.randint(0,canvas.winfo_height())
             canvas.create_line(x1, y1, x2, y2, fill=color, width=4)
         elif shape==1:
@@ -45,6 +45,10 @@ def time_step():
             x1=random.randint(0,canvas.winfo_width() -width )
             y1=random.randint(0,canvas.winfo_height()-height)
             canvas.create_rectangle(x1, y1, x1+width, y1+height, fill=color, outline="white")
+        elif shape==3:
+            x1=random.randint(0,canvas.winfo_width() )
+            y1=random.randint(0,canvas.winfo_height())
+            canvas.create_text(x1,y1,fill=color,text="Hello World!")
     time+=1
     root.after(10, time_step)
     
