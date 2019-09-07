@@ -22,14 +22,14 @@ class Keyboard:
     self.keys={}
 
   def key_down(self,key):
-    self.keys[key]=1;
+    self.keys[key]=True;
     
   def key_up(self,key):
-    self.keys[key]=0;
+    self.keys[key]=False;
 
   def is_down(self,key):
     if key in self.keys:
-      return self.keys[key]==1
+      return self.keys[key]
     return False
     
 class PosRad:
@@ -59,7 +59,7 @@ class Explosion:
     if self.time>Explosion.max_time_explosion:
       explosions.remove(self)
 
-  def draw(self,canvas):
+  def draw(self):
     for i in range(Explosion.nr_lines):
       length=int(self.posrad.rad*self.time/Explosion.max_time_explosion)
       x2=random.randint(-length,length)
@@ -85,7 +85,7 @@ class Star:
     if self.posrad.x<0:
       stars.remove(self)
     
-  def draw(self,canvas):
+  def draw(self):
     canvas.create_line(self.posrad.x, self.posrad.y,
                        self.posrad.x+1, self.posrad.y, fill="white")
   
@@ -106,7 +106,7 @@ class Meteor:
     if self.posrad.x<0:
       meteors.remove(self)
     
-  def draw(self,canvas):
+  def draw(self):
     canvas.create_oval(self.posrad.x-self.posrad.rad, self.posrad.y-self.posrad.rad, \
                        self.posrad.x+self.posrad.rad, self.posrad.y+self.posrad.rad, \
                        fill=self.color, outline="white")
@@ -158,7 +158,7 @@ class Ship:
       self.posrad.y=canvas.winfo_height()
       self.vy*=-1
   
-  def draw(self,canvas):
+  def draw(self):
     canvas.create_oval(self.posrad.x-self.posrad.rad, self.posrad.y-self.posrad.rad, \
                        self.posrad.x+self.posrad.rad, self.posrad.y+self.posrad.rad, \
                        fill=None, outline="white", width=5)
@@ -185,15 +185,15 @@ def time_step():
       meteors.append( Meteor(canvas.winfo_width(),random.randint(0,canvas.winfo_height())) )
     for i in stars:
       i.time_step()
-      i.draw(canvas)
-    ship.draw(canvas)
+      i.draw()
+    ship.draw()
     ship.time_step()
     for i in meteors:
       i.time_step()
-      i.draw(canvas)
+      i.draw()
     for i in explosions:
       i.time_step()
-      i.draw(canvas)
+      i.draw()
     ship.collision_detect(meteors)
     time+=1
     root.after(10, time_step)
