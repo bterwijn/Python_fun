@@ -14,8 +14,9 @@ canvas.pack()
 canvas.focus_set()
 time=0
 air_resistance=0.98
-balls=[]
-players=[]
+brake_factor=0.97
+static_objs=[]
+dynamic_objs=[]
 
 class Keyboard:
 
@@ -32,182 +33,243 @@ class Keyboard:
     if key in self.keys:
       return self.keys[key]
     return False
-    
-class PosRadSpeed:
 
-  def __init__(self,x,y,rad,vx,vy):
+class Speed:
+
+  def __init__(self,vx,vy):
+    self.x=vx
+    self.y=vy
+
+  def air_resits_m(self):
+    self.x*=air_resistance
+    self.y*=air_resistance
+
+  def reverse_m(self):
+    self.x*=-1
+    self.y*=-1
+
+  def speed_add_m(self,dx,dy):
+    self.x+=dx
+    self.y+=dy
+
+  def speed_add_polar_m(self,angle,size):
+    self.x+=math.cos(angle)*size
+    self.y+=math.sin(angle)*size
+
+  def speed_multipy_m(self,m):
+    self.x*=m
+    self.y*=m
+    
+def air_resits(obj):
+  obj.speed.air_resits_m()
+
+def reverse(obj):
+  obj.speed.reverse_m()
+
+def speed_add(obj,dx,dy):
+  obj.speed.speed_add_m(dx,dy)
+
+def speed_add_polar(obj,angle,size):
+  obj.speed.speed_add_polar_m(angle,size)
+
+def speed_multipy(obj,m):
+  obj.speed.speed_multipy_m(m)
+  
+def speed_swap(obj1,obj2):
+  temp=obj1.speed
+  obj1.speed=obj2.speed
+  obj2.speed=temp
+  rad_ratio=obj2.posrad.rad/obj1.posrad.rad
+  obj1.speed.speed_multipy_m(rad_ratio)
+  obj2.speed.speed_multipy_m(1/rad_ratio)
+  
+class PosRad:
+
+  def __init__(self,x,y,rad):
     self.x=x
     self.y=y
     self.rad=rad
-    self.vx=vx
-    self.vy=vy
 
-  def move(self,direct=1):
-    self.x+=self.vx*direct
-    self.y+=self.vy*direct
+  def move_m(self,speed,direction):
+    self.x+=speed.x*direction
+    self.y+=speed.y*direction
 
-  def air_resits(self):
-    self.vx*=air_resistance
-    self.vy*=air_resistance
-    
-  def bounce_border(self):
-    if self.x<0:
-      self.x=0
-      self.vx*=-1
-    if self.y<0:
-      self.y=0
-      self.vy*=-1
-    if self.x>canvas.winfo_width():
-      self.x=canvas.winfo_width()
-      self.vx*=-1
-    if self.y>canvas.winfo_height():
-      self.y=canvas.winfo_height()
-      self.vy*=-1
-      
-  def is_in_collision(self,p2):
-    dx=self.x-p2.x     # difference in x
-    dy=self.y-p2.y     # difference in y
-    sr=self.rad+p2.rad # sum of radia
-    return dx*dx+dy*dy<sr*sr # Pythagoras
-
-  def swap_speed(self,p2):
-    temp=self.vx
-    self.vx=p2.vx
-    p2.vx=temp
-    temp=self.vy
-    self.vy=p2.vy
-    p2.vy=temp
-    
-  def handle_collision(self,p2):
-    self.move(-1)
-    p2.move(-1)
-    self.swap_speed(p2)
-      
-  def check_and_handle_collision(self,p2):
-    if self.is_in_collision(p2):
-      self.handle_collision(p2)
-
-def collision_detect(obj):
-    for i in players:
-      if i!=obj:
-        obj.prs.check_and_handle_collision(i.prs)
-    for i in balls:
-      if i!=obj:
-        obj.prs.check_and_handle_collision(i.prs)
-      
-# class Explosion:
-#   size=200
-#   max_time_explosion=20
-#   nr_lines=20
+def move(obj,direction=1):
+  obj.posrad.move_m(obj.speed,direction)
   
-#   def __init__(self,x,y):
-#     self.posrad=PosRadSpeed(x,y,Explosion.size)
-#     self.time=0
-
-#   def time_step(self):
-#     self.time+=1
-#     if self.time>Explosion.max_time_explosion:
-#       explosions.remove(self)
-
-#   def draw(self,canvas):
-#     for i in range(Explosion.nr_lines):
-#       length=int(self.posrad.rad*self.time/Explosion.max_time_explosion)
-#       x2=random.randint(-length,length)
-#       y2=random.randint(-length,length)
-#       color=""
-#       if random.randint(0,2)==0:
-#         color="orange"
-#       else:
-#         color="red"
-#       canvas.create_line(self.posrad.x,   self.posrad.y,
-#                          self.posrad.x+x2,self.posrad.y+y2, fill=color, width=2)
-
-class Ball:
-  size=10
-
-  def __init__(self,x,y):
-    self.prs=PosRadSpeed(x,y,Ball.size,0,0)
-
-  def time_step(self):
-    self.prs.air_resits()
-    self.prs.move()
-    self.prs.bounce_border()
-    collision_detect(self)
+def is_in_vertical_border_collision(obj):
+  return obj.posrad.x<0 or obj.posrad.x>canvas.winfo_width()
     
-  def draw(self):
-    canvas.create_oval(self.prs.x-self.prs.rad, self.prs.y-self.prs.rad, \
-                       self.prs.x+self.prs.rad, self.prs.y+self.prs.rad, \
-                       fill=None, outline="white", width=4)
+def is_in_horizontal_border_collision(obj):
+  return obj.posrad.y<0 or obj.posrad.y>canvas.winfo_height()
+
+def square_distance(obj1,obj2):
+  dx=obj1.posrad.x - obj2.posrad.x   # difference in x
+  dy=obj1.posrad.y - obj2.posrad.y   # difference in y
+  return dx*dx+dy*dy                 # Pythagoras
+    
+def is_in_collision(obj1,obj2):
+  sr=obj1.posrad.rad + obj2.posrad.rad    # sum of radia
+  return square_distance(obj1,obj2)<sr*sr # collision when distance is smaller than sum radia
+      
 class Player:
   init_size=20
   pointer_length=1.8
   steer_speed=0.05
-  forward_speed=0.17
-  backward_speed=0.09
+  forward_speed=0.20
+  backward_speed=0.10
+  shoot_time=20
+  bullet_speed=8
   
   def __init__(self,x,y,a,color):
-    self.prs=PosRadSpeed(x,y,Player.init_size,0,0)
+    self.posrad=PosRad(x,y,Player.init_size)
+    self.speed=Speed(0,0)
     self.a=a
     self.color=color
+    self.last_shoot_time=0
     
   def steer(self,direction):
     self.a+=direction*Player.steer_speed
 
-  def add_speed(self,s):
-    self.prs.vx+=math.cos(self.a)*s
-    self.prs.vy+=math.sin(self.a)*s
+  def add_speed(self,size):
+    speed_add_polar(self,self.a,size)
     
   def time_step(self):
-    self.prs.air_resits()
-    self.prs.move()
-    self.prs.bounce_border()
-    collision_detect(self)
-      
+    air_resits(self)
+    move(self)
+    check_and_handle_collisions(self,dynamic_objs)
+
+  def shoot(self):
+    if time>self.last_shoot_time+Player.shoot_time:
+      self.last_shoot_time=time
+      bx=math.cos(self.a)
+      by=math.sin(self.a)
+      length=self.posrad.rad * Player.pointer_length
+      bullet=Bullet(self.posrad.x+bx*length, \
+                                 self.posrad.y+by*length, \
+                                 self.speed.x+bx*Player.bullet_speed, \
+                                 self.speed.y+by*Player.bullet_speed, \
+                                 self.color)
+      dynamic_objs.append(bullet)
+      check_and_handle_collisions(bullet,dynamic_objs)
+    
   def draw(self):
-    canvas.create_oval(self.prs.x-self.prs.rad, self.prs.y-self.prs.rad, \
-                       self.prs.x+self.prs.rad, self.prs.y+self.prs.rad, \
+    canvas.create_oval(self.posrad.x-self.posrad.rad, self.posrad.y-self.posrad.rad, \
+                       self.posrad.x+self.posrad.rad, self.posrad.y+self.posrad.rad, \
                        fill=None, outline=self.color, width=4)
-    length=self.prs.rad * Player.pointer_length
-    canvas.create_line(self.prs.x,                           self.prs.y,                           \
-                       self.prs.x + math.cos(self.a)*length, self.prs.y + math.sin(self.a)*length, \
+    length=self.posrad.rad * Player.pointer_length
+    canvas.create_line(self.posrad.x,                           self.posrad.y,                           \
+                       self.posrad.x + math.cos(self.a)*length, self.posrad.y + math.sin(self.a)*length, \
                        fill=self.color, width=4)
-      
+class Ball:
+  size=10
+
+  def __init__(self,x,y):
+    self.posrad=PosRad(x,y,Ball.size)
+    self.speed=Speed(0,0)
+
+  def time_step(self):
+    air_resits(self)
+    move(self)
+    check_and_handle_collisions(self,dynamic_objs)
+    
+  def draw(self):
+    canvas.create_oval(self.posrad.x-self.posrad.rad, self.posrad.y-self.posrad.rad, \
+                       self.posrad.x+self.posrad.rad, self.posrad.y+self.posrad.rad, \
+                       fill=None, outline="white", width=4)
+class Bullet:
+  size=4
+  life_time=200
+  
+  def __init__(self,x,y,vx,vy,color):
+    self.posrad=PosRad(x,y,Bullet.size)
+    self.speed=Speed(vx,vy)
+    self.color=color
+    self.time=0
+
+  def time_step(self):
+    self.time+=1
+    if self.time>Bullet.life_time:
+      dynamic_objs.remove(self)
+    else:
+      move(self)
+      check_and_handle_collisions(self,dynamic_objs)
+    
+  def draw(self):
+    canvas.create_oval(self.posrad.x-self.posrad.rad, self.posrad.y-self.posrad.rad, \
+                       self.posrad.x+self.posrad.rad, self.posrad.y+self.posrad.rad, \
+                       fill=None, outline=self.color, width=4)    
+
+def collide_border(obj1):
+  pass
+  #if obj1.__class__.__name__=="Bullet":
+  #  dynamic_objs.remove(obj1)
+
+def collide_dynamic(obj1,obj2):
+  if obj1.__class__.__name__=="Bullet":
+    dynamic_objs.remove(obj1)
+  if obj2.__class__.__name__=="Bullet":
+    dynamic_objs.remove(obj2)
+    
+def check_and_handle_border_collisions(obj1):
+  if is_in_horizontal_border_collision(obj1):
+    move(obj1,-1)
+    obj1.speed.y*=-1;
+    collide_border(obj1)
+  if is_in_vertical_border_collision(obj1):
+    move(obj1,-1)
+    obj1.speed.x*=-1;
+    collide_border(obj1)
+    
+def check_and_handle_dynamic_collisions(obj1,dynamic_objs):
+  for obj2 in dynamic_objs:
+    if obj1!=obj2 and is_in_collision(obj1,obj2):
+      move(obj1,-1)
+      speed_swap(obj1,obj2)
+      collide_dynamic(obj1,obj2)
+
+def check_and_handle_collisions(obj1,dynamic_objs):
+  check_and_handle_border_collisions(obj1)
+  check_and_handle_dynamic_collisions(obj1,dynamic_objs)   
 # globals
 keyboard=Keyboard()
-players.append(Player(canvas_width*1/3,canvas_height/2,0      ,"blue"))
-players.append(Player(canvas_width*2/3,canvas_height/2,math.pi,"green"))
+player1=Player(canvas_width*1/3,canvas_height/2,0      ,"blue")
+player2=Player(canvas_width*2/3,canvas_height/2,math.pi,"green")
+dynamic_objs.append(player1)
+dynamic_objs.append(player2)
 
 for i in range(10):
   x=random.randint(0,canvas_width)
   y=random.randint(0,canvas_width)
-  balls.append(Ball(x,y))
+  dynamic_objs.append(Ball(x,y))
 
 def handle_keyboard_state():
   if keyboard.is_down("z"):
-    players[0].steer(-1)
+    player1.steer(-1)
   if keyboard.is_down("x"):
-    players[0].steer(+1)
+    player1.steer(+1)
   if keyboard.is_down("f"):
-    players[0].add_speed(Player.forward_speed)
+    player1.add_speed(Player.forward_speed)
   if keyboard.is_down("c"):
-    players[0].add_speed(-Player.backward_speed)
+    speed_multipy(player1,brake_factor)
+  if keyboard.is_down("g"):
+    player1.shoot()
   if keyboard.is_down("comma"):
-    players[1].steer(-1)
+    player2.steer(-1)
   if keyboard.is_down("period"):
-    players[1].steer(+1)
+    player2.steer(+1)
   if keyboard.is_down("apostrophe"):
-    players[1].add_speed(Player.forward_speed)
+    player2.add_speed(Player.forward_speed)
   if keyboard.is_down("slash"):
-    players[1].add_speed(-Player.backward_speed)
-
+    speed_multipy(player2,brake_factor)
+  if keyboard.is_down("Return"):
+    player2.shoot()
+    
 def time_step():
     global time
     canvas.delete("all") # remove all previous drawings
     handle_keyboard_state()
-    for i in players:
-      i.time_step()
-      i.draw()
-    for i in balls:
+    for i in dynamic_objs:
       i.time_step()
       i.draw()
     time+=1
