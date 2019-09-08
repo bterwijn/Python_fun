@@ -39,7 +39,7 @@ class PosRad:
     self.y=y
     self.rad=rad
 
-  def in_collision(self,p2):
+  def is_in_collision(self,p2):
     dx=self.x-p2.x     # difference in x
     dy=self.y-p2.y     # difference in y
     sr=self.rad+p2.rad # sum of radia
@@ -77,7 +77,7 @@ class Star:
   max_speed=3
   
   def __init__(self,x,y):
-    self.posrad=PosRad(x,y,1)
+    self.posrad=PosRad(x,y,2)
     self.speed=random.uniform(Star.min_speed,Star.max_speed)
 
   def time_step(self):
@@ -86,23 +86,27 @@ class Star:
       stars.remove(self)
     
   def draw(self):
-    canvas.create_line(self.posrad.x, self.posrad.y,
-                       self.posrad.x+1, self.posrad.y, fill="white")
+    canvas.create_oval(self.posrad.x-self.posrad.rad, self.posrad.y-self.posrad.rad, \
+                       self.posrad.x+self.posrad.rad, self.posrad.y+self.posrad.rad, \
+                       fill="white", outline="white")
   
 class Meteor:
   min_speed=3
   max_speed=9
   min_size=6
   size=10
+  max_y_speed=0.3
   
   def __init__(self,x,y):
-    self.speed=random.uniform(Meteor.min_speed,Meteor.max_speed)
-    r=(self.speed - Meteor.min_speed) / (Meteor.max_speed - Meteor.min_speed)
+    self.speed_x=random.uniform(Meteor.min_speed,Meteor.max_speed)
+    self.speed_y=random.uniform(-Meteor.max_y_speed,Meteor.max_y_speed)
+    r=(self.speed_x - Meteor.min_speed) / (Meteor.max_speed - Meteor.min_speed)
     self.posrad=PosRad(x,y,Meteor.min_size + Meteor.size - r * Meteor.size)
     self.color="green"
 
   def time_step(self):
-    self.posrad.x-=self.speed
+    self.posrad.x-=self.speed_x
+    self.posrad.y-=self.speed_y
     if self.posrad.x<0:
       meteors.remove(self)
     
@@ -110,7 +114,12 @@ class Meteor:
     canvas.create_oval(self.posrad.x-self.posrad.rad, self.posrad.y-self.posrad.rad, \
                        self.posrad.x+self.posrad.rad, self.posrad.y+self.posrad.rad, \
                        fill=self.color, outline="white")
-
+    
+  def is_in_laser(self,x,y):
+    return self.posrad.y+self.posrad.rad > y and \
+      self.posrad.y-self.posrad.rad < y and \
+      self.posrad.x > x
+    
 class Ship:
   size=20
   air_resistance=0.995
@@ -140,6 +149,14 @@ class Ship:
       self.vy+=Ship.speed
       canvas.create_line(self.posrad.x , self.posrad.y-self.posrad.rad,
                          self.posrad.x , self.posrad.y-self.posrad.rad-20, fill="red", width=10)
+    if keyboard.is_down("space"):
+      canvas.create_line(self.posrad.x+self.posrad.rad ,self.posrad.y ,
+                         canvas.winfo_width()          , self.posrad.y, fill="red", width=4)
+      for i in meteors:
+        if i.is_in_laser(self.posrad.x,self.posrad.y):
+          explosions.append(Explosion(i.posrad.x,i.posrad.y))
+          meteors.remove(i)
+          
     self.vx-=Ship.wind
     self.posrad.x+=self.vx
     self.posrad.y+=self.vy
@@ -165,7 +182,7 @@ class Ship:
 
   def collision_detect(self,meteors):
     for i in meteors:
-      if self.posrad.in_collision(i.posrad):
+      if self.posrad.is_in_collision(i.posrad):
         explosions.append(Explosion(i.posrad.x,i.posrad.y))
         meteors.remove(i)
         self.vx-=Ship.collision_bump
@@ -173,8 +190,8 @@ class Ship:
 # globals
 keyboard=Keyboard()
 ship=Ship(canvas_width/2,canvas_height/2)
-avr_star_time=10
-avr_meteor_time=15
+avr_star_time=20
+avr_meteor_time=12
 
 def time_step():
     global time
