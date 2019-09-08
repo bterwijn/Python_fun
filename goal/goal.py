@@ -40,48 +40,25 @@ class Speed:
     self.x=vx
     self.y=vy
 
-  def air_resits_m(self):
-    self.x*=air_resistance
-    self.y*=air_resistance
-
-  def reverse_m(self):
-    self.x*=-1
-    self.y*=-1
-
-  def speed_add_m(self,dx,dy):
-    self.x+=dx
-    self.y+=dy
-
-  def speed_add_polar_m(self,angle,size):
+  def add_polar(self,angle,size):
     self.x+=math.cos(angle)*size
     self.y+=math.sin(angle)*size
 
-  def speed_multipy_m(self,m):
+  def air_resits(self):
+    self.x*=air_resistance
+    self.y*=air_resistance
+    
+  def multipy(self,m):
     self.x*=m
     self.y*=m
-    
-def air_resits(obj):
-  obj.speed.air_resits_m()
-
-def reverse(obj):
-  obj.speed.reverse_m()
-
-def speed_add(obj,dx,dy):
-  obj.speed.speed_add_m(dx,dy)
-
-def speed_add_polar(obj,angle,size):
-  obj.speed.speed_add_polar_m(angle,size)
-
-def speed_multipy(obj,m):
-  obj.speed.speed_multipy_m(m)
   
 def speed_swap(obj1,obj2):
   temp=obj1.speed
   obj1.speed=obj2.speed
   obj2.speed=temp
   rad_ratio=obj2.posrad.rad/obj1.posrad.rad
-  obj1.speed.speed_multipy_m(rad_ratio)
-  obj2.speed.speed_multipy_m(1/rad_ratio)
+  obj1.speed.multipy(rad_ratio)
+  obj2.speed.multipy(1/rad_ratio)
   
 class PosRad:
 
@@ -90,12 +67,9 @@ class PosRad:
     self.y=y
     self.rad=rad
 
-  def move_m(self,speed,direction):
+  def move(self,speed,direction=1):
     self.x+=speed.x*direction
     self.y+=speed.y*direction
-
-def move(obj,direction=1):
-  obj.posrad.move_m(obj.speed,direction)
   
 def is_in_vertical_border_collision(obj):
   return obj.posrad.x<0 or obj.posrad.x>canvas.winfo_width()
@@ -117,33 +91,32 @@ class Player:
   pointer_length=1.8
   steer_speed=0.05
   forward_speed=0.20
-  backward_speed=0.10
   shoot_time=20
   bullet_speed=8
   
   def __init__(self,x,y,a,color):
     self.posrad=PosRad(x,y,Player.init_size)
     self.speed=Speed(0,0)
-    self.a=a
+    self.angle=a
     self.color=color
     self.last_shoot_time=0
     
   def steer(self,direction):
-    self.a+=direction*Player.steer_speed
+    self.angle+=direction*Player.steer_speed
 
   def add_speed(self,size):
-    speed_add_polar(self,self.a,size)
+    self.speed.add_polar(self.angle,size)
     
   def time_step(self):
-    air_resits(self)
-    move(self)
+    self.speed.air_resits()
+    self.posrad.move(self.speed)
     check_and_handle_collisions(self,dynamic_objs)
 
   def shoot(self):
     if time>self.last_shoot_time+Player.shoot_time:
       self.last_shoot_time=time
-      bx=math.cos(self.a)
-      by=math.sin(self.a)
+      bx=math.cos(self.angle)
+      by=math.sin(self.angle)
       length=self.posrad.rad * Player.pointer_length
       bullet=Bullet(self.posrad.x+bx*length, \
                                  self.posrad.y+by*length, \
@@ -159,7 +132,7 @@ class Player:
                        fill=None, outline=self.color, width=4)
     length=self.posrad.rad * Player.pointer_length
     canvas.create_line(self.posrad.x,                           self.posrad.y,                           \
-                       self.posrad.x + math.cos(self.a)*length, self.posrad.y + math.sin(self.a)*length, \
+                       self.posrad.x + math.cos(self.angle)*length, self.posrad.y + math.sin(self.angle)*length, \
                        fill=self.color, width=4)
 class Ball:
   size=10
@@ -169,8 +142,8 @@ class Ball:
     self.speed=Speed(0,0)
 
   def time_step(self):
-    air_resits(self)
-    move(self)
+    self.speed.air_resits()
+    self.posrad.move(self.speed)
     check_and_handle_collisions(self,dynamic_objs)
     
   def draw(self):
@@ -192,7 +165,7 @@ class Bullet:
     if self.time>Bullet.life_time:
       dynamic_objs.remove(self)
     else:
-      move(self)
+      self.posrad.move(self.speed)
       check_and_handle_collisions(self,dynamic_objs)
     
   def draw(self):
@@ -211,20 +184,20 @@ def collide_dynamic(obj1,obj2):
   if obj2.__class__.__name__=="Bullet":
     dynamic_objs.remove(obj2)
     
-def check_and_handle_border_collisions(obj1):
-  if is_in_horizontal_border_collision(obj1):
-    move(obj1,-1)
-    obj1.speed.y*=-1;
-    collide_border(obj1)
-  if is_in_vertical_border_collision(obj1):
-    move(obj1,-1)
-    obj1.speed.x*=-1;
-    collide_border(obj1)
+def check_and_handle_border_collisions(obj):
+  if is_in_horizontal_border_collision(obj):
+    obj.posrad.move(obj.speed,-1)
+    obj.speed.y*=-1;
+    collide_border(obj)
+  if is_in_vertical_border_collision(obj):
+    obj.posrad.move(obj.speed,-1)
+    obj.speed.x*=-1;
+    collide_border(obj)
     
 def check_and_handle_dynamic_collisions(obj1,dynamic_objs):
   for obj2 in dynamic_objs:
     if obj1!=obj2 and is_in_collision(obj1,obj2):
-      move(obj1,-1)
+      obj1.posrad.move(obj1.speed,-1)
       speed_swap(obj1,obj2)
       collide_dynamic(obj1,obj2)
 
@@ -251,7 +224,7 @@ def handle_keyboard_state():
   if keyboard.is_down("f"):
     player1.add_speed(Player.forward_speed)
   if keyboard.is_down("c"):
-    speed_multipy(player1,brake_factor)
+    player1.speed.multipy(brake_factor)
   if keyboard.is_down("g"):
     player1.shoot()
   if keyboard.is_down("comma"):
@@ -261,7 +234,7 @@ def handle_keyboard_state():
   if keyboard.is_down("apostrophe"):
     player2.add_speed(Player.forward_speed)
   if keyboard.is_down("slash"):
-    speed_multipy(player2,brake_factor)
+    player2.speed.multipy(brake_factor)
   if keyboard.is_down("Return"):
     player2.shoot()
     
