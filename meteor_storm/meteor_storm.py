@@ -69,8 +69,11 @@ class Explosion:
         color="orange"
       else:
         color="red"
-      canvas.create_line(self.posrad.x,   self.posrad.y,
+      canvas.create_line(self.posrad.x,   self.posrad.y, \
                          self.posrad.x+x2,self.posrad.y+y2, fill=color, width=2)
+      canvas.create_oval(self.posrad.x-length, self.posrad.y-length, \
+                         self.posrad.x+length, self.posrad.y+length, \
+                         fill=None, outline="red")
 
 class Star:
   min_speed=1
@@ -125,7 +128,7 @@ class Ship:
   air_resistance=0.995
   speed=0.2
   wind=0.1
-  collision_bump=6
+  collision_bump=10
   
   def __init__(self,x,y):
     self.posrad=PosRad(x,y,Ship.size)
