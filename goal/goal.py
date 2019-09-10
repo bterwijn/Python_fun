@@ -15,8 +15,9 @@ canvas.focus_set()
 time=0
 air_resistance=0.98
 brake_factor=0.97
-static_objs=[]
-dynamic_objs=[]
+players=[]
+balls=[]
+bullets=[]
 
 class Keyboard:
 
@@ -85,7 +86,42 @@ def square_distance(obj1,obj2):
 def is_in_collision(obj1,obj2):
   sr=obj1.posrad.rad + obj2.posrad.rad    # sum of radia
   return square_distance(obj1,obj2)<sr*sr # collision when distance is smaller than sum radia
-      
+
+def collide_border(obj1):
+  pass
+  #if obj1.__class__.__name__=="Bullet":
+  #  dynamic_objs.remove(obj1)
+
+def collide_dynamic(obj1,obj2):
+  if obj1.__class__.__name__=="Bullet":
+    #if obj1 in bullets:
+    bullets.remove(obj1)
+  if obj2.__class__.__name__=="Bullet":
+    #if obj2 in bullets:
+    bullets.remove(obj2)
+    
+def check_and_handle_border_collisions(obj):
+  if is_in_horizontal_border_collision(obj):
+    obj.posrad.move(obj.speed,-1)
+    obj.speed.y*=-1;
+    collide_border(obj)
+  if is_in_vertical_border_collision(obj):
+    obj.posrad.move(obj.speed,-1)
+    obj.speed.x*=-1;
+    collide_border(obj)
+    
+def check_and_handle_dynamic_collisions(obj1,obj_lists):
+  for obj_list in obj_lists:
+    for obj2 in obj_list:
+      if obj1!=obj2 and is_in_collision(obj1,obj2):
+        obj1.posrad.move(obj1.speed,-1)
+        speed_swap(obj1,obj2)
+        collide_dynamic(obj1,obj2)
+
+def check_and_handle_collisions(obj1,obj_lists):
+  check_and_handle_border_collisions(obj1)
+  check_and_handle_dynamic_collisions(obj1,obj_lists)
+
 class Player:
   init_size=20
   pointer_length=1.8
@@ -110,7 +146,7 @@ class Player:
   def time_step(self):
     self.speed.air_resits()
     self.posrad.move(self.speed)
-    check_and_handle_collisions(self,dynamic_objs)
+    check_and_handle_collisions(self,[players,balls,bullets])
 
   def shoot(self):
     if time>self.last_shoot_time+Player.shoot_time:
@@ -123,8 +159,8 @@ class Player:
                                  self.speed.x+bx*Player.bullet_speed, \
                                  self.speed.y+by*Player.bullet_speed, \
                                  self.color)
-      dynamic_objs.append(bullet)
-      check_and_handle_collisions(bullet,dynamic_objs)
+      bullets.append(bullet)
+      check_and_handle_collisions(bullet,[players,balls])
     
   def draw(self):
     canvas.create_oval(self.posrad.x-self.posrad.rad, self.posrad.y-self.posrad.rad, \
@@ -144,7 +180,7 @@ class Ball:
   def time_step(self):
     self.speed.air_resits()
     self.posrad.move(self.speed)
-    check_and_handle_collisions(self,dynamic_objs)
+    check_and_handle_collisions(self,[players,balls,bullets])
     
   def draw(self):
     canvas.create_oval(self.posrad.x-self.posrad.rad, self.posrad.y-self.posrad.rad, \
@@ -163,58 +199,27 @@ class Bullet:
   def time_step(self):
     self.time+=1
     if self.time>Bullet.life_time:
-      dynamic_objs.remove(self)
+      bullets.remove(self)
     else:
       self.posrad.move(self.speed)
-      check_and_handle_collisions(self,dynamic_objs)
+      check_and_handle_collisions(self,[players,balls])
     
   def draw(self):
     canvas.create_oval(self.posrad.x-self.posrad.rad, self.posrad.y-self.posrad.rad, \
                        self.posrad.x+self.posrad.rad, self.posrad.y+self.posrad.rad, \
-                       fill=None, outline=self.color, width=4)    
-
-def collide_border(obj1):
-  pass
-  #if obj1.__class__.__name__=="Bullet":
-  #  dynamic_objs.remove(obj1)
-
-def collide_dynamic(obj1,obj2):
-  if obj1.__class__.__name__=="Bullet":
-    dynamic_objs.remove(obj1)
-  if obj2.__class__.__name__=="Bullet":
-    dynamic_objs.remove(obj2)
-    
-def check_and_handle_border_collisions(obj):
-  if is_in_horizontal_border_collision(obj):
-    obj.posrad.move(obj.speed,-1)
-    obj.speed.y*=-1;
-    collide_border(obj)
-  if is_in_vertical_border_collision(obj):
-    obj.posrad.move(obj.speed,-1)
-    obj.speed.x*=-1;
-    collide_border(obj)
-    
-def check_and_handle_dynamic_collisions(obj1,dynamic_objs):
-  for obj2 in dynamic_objs:
-    if obj1!=obj2 and is_in_collision(obj1,obj2):
-      obj1.posrad.move(obj1.speed,-1)
-      speed_swap(obj1,obj2)
-      collide_dynamic(obj1,obj2)
-
-def check_and_handle_collisions(obj1,dynamic_objs):
-  check_and_handle_border_collisions(obj1)
-  check_and_handle_dynamic_collisions(obj1,dynamic_objs)   
+                       fill=None, outline=self.color, width=4)
+  
 # globals
 keyboard=Keyboard()
 player1=Player(canvas_width*1/3,canvas_height/2,0      ,"blue")
 player2=Player(canvas_width*2/3,canvas_height/2,math.pi,"green")
-dynamic_objs.append(player1)
-dynamic_objs.append(player2)
+players.append(player1)
+players.append(player2)
 
 for i in range(10):
   x=random.randint(0,canvas_width)
   y=random.randint(0,canvas_width)
-  dynamic_objs.append(Ball(x,y))
+  balls.append(Ball(x,y))
 
 def handle_keyboard_state():
   if keyboard.is_down("z"):
@@ -242,9 +247,10 @@ def time_step():
     global time
     canvas.delete("all") # remove all previous drawings
     handle_keyboard_state()
-    for i in dynamic_objs:
-      i.time_step()
-      i.draw()
+    for obj_list in [players,balls,bullets]:
+      for obj in obj_list:
+        obj.time_step()
+        obj.draw()
     time+=1
     root.after(10, time_step)
 
