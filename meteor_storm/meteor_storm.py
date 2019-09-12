@@ -2,6 +2,13 @@
 import tkinter as tk
 import random
 
+print("Avoid the meteors, good luck. Keys:")
+print("  'z' or 'Left'     move left")
+print("  'x' or 'Right'    move right")
+print("  ''' or 'Up'       move up")
+print("  '/' or 'Down'     move down")
+print("  'Space'           shoot")
+
 # globals
 root = tk.Tk()
 root.title("Meteor Storm")  

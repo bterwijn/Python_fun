@@ -3,6 +3,18 @@ import tkinter as tk
 import random
 import math
 
+print("Two player game, bump a ball in your goal to score. Keys:")
+print(" player1: 'z'        turn left")
+print(" player1: 'x'        turn right")
+print(" player1: 'f'        move forward")
+print(" player1: 'x'        brake")
+print(" player1: 'f'        shoot")
+print(" player2: ','        turn left")
+print(" player2: '.'        turn right")
+print(" player2: '''        move forward")
+print(" player2: '/'        brake")
+print(" player2: Return     shoot")
+
 # globals
 root = tk.Tk()
 root.title("Goal")  
@@ -18,6 +30,7 @@ brake_factor=0.97
 players=[]
 balls=[]
 bullets=[]
+goals=[]
 
 class Keyboard:
 
@@ -167,7 +180,7 @@ class Player:
                        self.posrad.x+self.posrad.rad, self.posrad.y+self.posrad.rad, \
                        fill=None, outline=self.color, width=4)
     length=self.posrad.rad * Player.pointer_length
-    canvas.create_line(self.posrad.x,                           self.posrad.y,                           \
+    canvas.create_line(self.posrad.x,                               self.posrad.y,                               \
                        self.posrad.x + math.cos(self.angle)*length, self.posrad.y + math.sin(self.angle)*length, \
                        fill=self.color, width=4)
 class Ball:
@@ -208,13 +221,31 @@ class Bullet:
     canvas.create_oval(self.posrad.x-self.posrad.rad, self.posrad.y-self.posrad.rad, \
                        self.posrad.x+self.posrad.rad, self.posrad.y+self.posrad.rad, \
                        fill=None, outline=self.color, width=4)
-  
+
+class Goal:
+  size=50
+
+  def __init__(self,x,y,color):
+    self.posrad=PosRad(x,y,Ball.size)
+    self.speed=Speed(0,0)
+    self.color=color
+    
+  def time_step(self):
+    pass
+    
+  def draw(self):
+    canvas.create_oval(self.posrad.x-Goal.size, self.posrad.y-Goal.size, \
+                       self.posrad.x+Goal.size, self.posrad.y+Goal.size, \
+                       fill=None, outline=self.color, width=8) 
 # globals
 keyboard=Keyboard()
 player1=Player(canvas_width*1/3,canvas_height/2,0      ,"blue")
 player2=Player(canvas_width*2/3,canvas_height/2,math.pi,"green")
 players.append(player1)
 players.append(player2)
+goals.append(Goal(             Goal.size*3,canvas_height/2,"blue"))
+goals.append(Goal(canvas_width-Goal.size*3,canvas_height/2,"green"))
+
 
 for i in range(10):
   x=random.randint(0,canvas_width)
@@ -247,7 +278,7 @@ def time_step():
     global time
     canvas.delete("all") # remove all previous drawings
     handle_keyboard_state()
-    for obj_list in [players,balls,bullets]:
+    for obj_list in [goals,players,balls,bullets]:
       for obj in obj_list:
         obj.time_step()
         obj.draw()
