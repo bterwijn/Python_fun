@@ -234,6 +234,6 @@ def key_up(e):
     
 root.bind("<KeyPress>", key_down)
 root.bind("<KeyRelease>", key_up)
-root.after(100, time_step)
 root.update()
+root.after(100, time_step)
 root.mainloop()
