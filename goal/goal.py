@@ -3,7 +3,7 @@ import tkinter as tk
 import random
 import math
 
-print("Two player game, bump a ball in your goal to score. Keys:")
+print("Two player game, bump balls in your goal to score. Keys:")
 print(" player1: 'z'        turn left")
 print(" player1: 'x'        turn right")
 print(" player1: 'f'        move forward")
@@ -136,6 +136,7 @@ def check_and_handle_collisions(obj1,obj_lists):
       speed_swap(o1,o2)
       if o1.__class__.__name__=="Ball" and \
          o2.__class__.__name__=="Goal":
+        o2.score()
         if o1 in balls:
           balls.remove(o1)
       if o1.__class__.__name__=="Bullet":
@@ -234,23 +235,41 @@ class Bullet:
 
 class Goal:
   size=50
-
+  mark_height=14
+  mark_spacing=8
+  explosion_rad=25
+  
   def __init__(self,x,y,color):
     self.posrad=PosRad(x,y,Goal.size)
     self.speed=Speed(0,0)
     self.color=color
     self.goal_count=0
+    self.goal_time=0
     
   def time_step(self):
     self.speed.x=0
     self.speed.y=0
+    self.goal_time-=1
+
+  def score(self):
+    self.goal_count+=1
+    self.goal_time=Goal.explosion_rad
     
   def draw(self):
     canvas.create_oval(self.posrad.x-self.posrad.rad, self.posrad.y-self.posrad.rad, \
                        self.posrad.x+self.posrad.rad, self.posrad.y+self.posrad.rad, \
                        fill=None, outline=self.color, width=8)
-    #canvas.create_text(self.posrad.x, self.posrad.y, fill=self.color, \
-    #                   text=str(self.goal_count), font="Times 30")
+    h=Goal.mark_height
+    w=Goal.mark_spacing
+    for i in range(self.goal_count):
+      canvas.create_line(self.posrad.x + (.5+i-self.goal_count/2)*w, self.posrad.y-h, \
+                         self.posrad.x + (.5+i-self.goal_count/2)*w, self.posrad.y+h, \
+                         fill=self.color, width=4)
+    if self.goal_time>0:
+      t=(Goal.explosion_rad-self.goal_time)*4
+      canvas.create_oval(self.posrad.x-self.posrad.rad-t, self.posrad.y-self.posrad.rad-t, \
+                         self.posrad.x+self.posrad.rad+t, self.posrad.y+self.posrad.rad+t, \
+                         fill=None, outline="red", width=4)
     
 # globals
 keyboard=Keyboard()
