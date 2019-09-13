@@ -234,13 +234,13 @@ class Bullet:
                        fill=None, outline=self.color, width=4)
 
 class Goal:
-  size=50
+  initial_size=70
   mark_height=14
   mark_spacing=8
   explosion_rad=25
   
   def __init__(self,x,y,color):
-    self.posrad=PosRad(x,y,Goal.size)
+    self.posrad=PosRad(x,y,Goal.initial_size)
     self.speed=Speed(0,0)
     self.color=color
     self.goal_count=0
@@ -253,6 +253,7 @@ class Goal:
 
   def score(self):
     self.goal_count+=1
+    self.posrad.rad*=0.9
     self.goal_time=Goal.explosion_rad
     
   def draw(self):
@@ -264,7 +265,7 @@ class Goal:
     for i in range(self.goal_count):
       canvas.create_line(self.posrad.x + (.5+i-self.goal_count/2)*w, self.posrad.y-h, \
                          self.posrad.x + (.5+i-self.goal_count/2)*w, self.posrad.y+h, \
-                         fill=self.color, width=4)
+                         fill="red", width=4)
     if self.goal_time>0:
       t=(Goal.explosion_rad-self.goal_time)*4
       canvas.create_oval(self.posrad.x-self.posrad.rad-t, self.posrad.y-self.posrad.rad-t, \
@@ -277,8 +278,8 @@ player1=Player(canvas_width*1/3,canvas_height/2,0      ,"blue")
 player2=Player(canvas_width*2/3,canvas_height/2,math.pi,"green")
 players.append(player1)
 players.append(player2)
-goals.append(Goal(             Goal.size*3,canvas_height/2,"blue"))
-goals.append(Goal(canvas_width-Goal.size*3,canvas_height/2,"green"))
+goals.append(Goal(             Goal.initial_size*3,canvas_height/2,"blue"))
+goals.append(Goal(canvas_width-Goal.initial_size*3,canvas_height/2,"green"))
 
 def handle_keyboard_state():
   if keyboard.is_down("z"):
