@@ -14,6 +14,8 @@ print(" player2: '.'        turn right")
 print(" player2: '''        move forward")
 print(" player2: '/'        brake")
 print(" player2: Return     shoot")
+print("Add an external keyboard in case key presses are ignored when")
+print("many keys are pressed simultaneously.")
 
 # globals
 root = tk.Tk()
@@ -61,11 +63,11 @@ class Speed:
   def air_resits(self):
     self.x*=air_resistance
     self.y*=air_resistance
-    
+
   def multipy(self,m):
     self.x*=m
     self.y*=m
-  
+
 def speed_swap(obj1,obj2):
   temp=obj1.speed
   obj1.speed=obj2.speed
@@ -73,7 +75,7 @@ def speed_swap(obj1,obj2):
   rad_ratio=obj2.posrad.rad/obj1.posrad.rad
   obj1.speed.multipy(rad_ratio)
   obj2.speed.multipy(1/rad_ratio)
-  
+
 class PosRad:
 
   def __init__(self,x,y,rad):
@@ -84,10 +86,10 @@ class PosRad:
   def move(self,speed,direction=1):
     self.x+=speed.x*direction
     self.y+=speed.y*direction
-  
+
 def is_in_vertical_border_collision(obj):
   return obj.posrad.x<0 or obj.posrad.x>canvas.winfo_width()
-    
+
 def is_in_horizontal_border_collision(obj):
   return obj.posrad.y<0 or obj.posrad.y>canvas.winfo_height()
 
@@ -95,7 +97,7 @@ def square_distance(obj1,obj2):
   dx=obj1.posrad.x - obj2.posrad.x   # difference in x
   dy=obj1.posrad.y - obj2.posrad.y   # difference in y
   return dx*dx+dy*dy                 # Pythagoras
-    
+
 def is_in_collision(obj1,obj2):
   sr=obj1.posrad.rad + obj2.posrad.rad    # sum of radia
   return square_distance(obj1,obj2)<sr*sr # collision when distance is smaller than sum radia
@@ -109,9 +111,9 @@ def check_dynamic_collisions(obj1,obj_lists):
 
 def check_border_collisions(obj):
   if is_in_horizontal_border_collision(obj):
-    return (obj,"HB")
+    return (obj,"Horizontal_Border")
   if is_in_vertical_border_collision(obj):
-    return (obj,"VB")
+    return (obj,"Vertical_Border")
   return (None,None)
 
 def check_collisions(obj1,obj_lists):
@@ -123,14 +125,14 @@ def check_collisions(obj1,obj_lists):
 def is_collision_free(obj1,obj_lists):
   o1,o2=check_collisions(obj1,obj_lists)
   return o1==None
-  
+
 def check_and_handle_collisions(obj1,obj_lists):
   o1,o2=check_collisions(obj1,obj_lists)
   if o1!=None:
     o1.posrad.move(o1.speed,-1)
-    if o2=="HB":
+    if o2=="Horizontal_Border":
       o1.speed.y*=-1;
-    elif o2=="VB":
+    elif o2=="Vertical_Border":
       o1.speed.x*=-1;
     else:
       speed_swap(o1,o2)
@@ -145,7 +147,7 @@ def check_and_handle_collisions(obj1,obj_lists):
       if o2.__class__.__name__=="Bullet":
         if o2 in bullets:
           bullets.remove(o2)
-  
+
 class Player:
   init_size=20
   pointer_length=1.8
@@ -153,20 +155,20 @@ class Player:
   forward_speed=0.20
   shoot_time=20
   bullet_speed=8
-  
+
   def __init__(self,x,y,a,color):
     self.posrad=PosRad(x,y,Player.init_size)
     self.speed=Speed(0,0)
     self.angle=a
     self.color=color
     self.last_shoot_time=0
-    
+
   def steer(self,direction):
     self.angle+=direction*Player.steer_speed
 
   def add_speed(self,size):
     self.speed.add_polar(self.angle,size)
-    
+
   def time_step(self):
     self.speed.air_resits()
     self.posrad.move(self.speed)
@@ -185,7 +187,7 @@ class Player:
                                  self.color)
       bullets.append(bullet)
       check_and_handle_collisions(bullet,[players,balls])
-    
+
   def draw(self):
     canvas.create_oval(self.posrad.x-self.posrad.rad, self.posrad.y-self.posrad.rad, \
                        self.posrad.x+self.posrad.rad, self.posrad.y+self.posrad.rad, \
@@ -194,6 +196,7 @@ class Player:
     canvas.create_line(self.posrad.x,                               self.posrad.y,                               \
                        self.posrad.x + math.cos(self.angle)*length, self.posrad.y + math.sin(self.angle)*length, \
                        fill=self.color, width=4)
+
 class Ball:
   size=10
 
@@ -205,15 +208,16 @@ class Ball:
     self.speed.air_resits()
     self.posrad.move(self.speed)
     check_and_handle_collisions(self,[players,balls,bullets,goals])
-    
+
   def draw(self):
     canvas.create_oval(self.posrad.x-self.posrad.rad, self.posrad.y-self.posrad.rad, \
                        self.posrad.x+self.posrad.rad, self.posrad.y+self.posrad.rad, \
                        fill=None, outline="white", width=4)
+
 class Bullet:
   size=4
   life_time=200
-  
+
   def __init__(self,x,y,vx,vy,color):
     self.posrad=PosRad(x,y,Bullet.size)
     self.speed=Speed(vx,vy)
@@ -227,7 +231,7 @@ class Bullet:
     else:
       self.posrad.move(self.speed)
       check_and_handle_collisions(self,[players,balls])
-    
+
   def draw(self):
     canvas.create_oval(self.posrad.x-self.posrad.rad, self.posrad.y-self.posrad.rad, \
                        self.posrad.x+self.posrad.rad, self.posrad.y+self.posrad.rad, \
@@ -238,14 +242,14 @@ class Goal:
   mark_height=14
   mark_spacing=8
   explosion_rad=25
-  
+
   def __init__(self,x,y,color):
     self.posrad=PosRad(x,y,Goal.initial_size)
     self.speed=Speed(0,0)
     self.color=color
     self.goal_count=0
     self.goal_time=0
-    
+
   def time_step(self):
     self.speed.x=0
     self.speed.y=0
@@ -255,7 +259,7 @@ class Goal:
     self.goal_count+=1
     self.posrad.rad*=0.9
     self.goal_time=Goal.explosion_rad
-    
+
   def draw(self):
     canvas.create_oval(self.posrad.x-self.posrad.rad, self.posrad.y-self.posrad.rad, \
                        self.posrad.x+self.posrad.rad, self.posrad.y+self.posrad.rad, \
@@ -271,7 +275,7 @@ class Goal:
       canvas.create_oval(self.posrad.x-self.posrad.rad-t, self.posrad.y-self.posrad.rad-t, \
                          self.posrad.x+self.posrad.rad+t, self.posrad.y+self.posrad.rad+t, \
                          fill=None, outline="red", width=4)
-    
+
 # globals
 keyboard=Keyboard()
 player1=Player(canvas_width*1/3,canvas_height/2,0      ,"blue")
@@ -302,7 +306,7 @@ def handle_keyboard_state():
     player2.speed.multipy(brake_factor)
   if keyboard.is_down("Return"):
     player2.shoot()
-    
+
 def time_step():
     global time
     canvas.delete("all") # remove all previous drawings
@@ -330,7 +334,7 @@ def key_down(e):
 def key_up(e):
     keyboard.key_up(e.keysym)
     #print('up:',e.keysym)
-    
+
 root.bind("<KeyPress>", key_down)
 root.bind("<KeyRelease>", key_up)
 root.update()
