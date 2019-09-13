@@ -5,6 +5,8 @@
 import tkinter as tk
 import random
 
+print("Drag balls with mouse:")
+
 root = tk.Tk()
 root.title("Elastics")  
 canvas_width=1000
