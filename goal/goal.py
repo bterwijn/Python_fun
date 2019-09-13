@@ -191,11 +191,11 @@ class Player:
   def draw(self):
     canvas.create_oval(self.posrad.x-self.posrad.rad, self.posrad.y-self.posrad.rad, \
                        self.posrad.x+self.posrad.rad, self.posrad.y+self.posrad.rad, \
-                       fill=None, outline=self.color, width=4)
+                       fill=None, outline=self.color, width=6)
     length=self.posrad.rad * Player.pointer_length
     canvas.create_line(self.posrad.x,                               self.posrad.y,                               \
                        self.posrad.x + math.cos(self.angle)*length, self.posrad.y + math.sin(self.angle)*length, \
-                       fill=self.color, width=4)
+                       fill=self.color, width=6)
 
 class Ball:
   size=10
@@ -212,7 +212,7 @@ class Ball:
   def draw(self):
     canvas.create_oval(self.posrad.x-self.posrad.rad, self.posrad.y-self.posrad.rad, \
                        self.posrad.x+self.posrad.rad, self.posrad.y+self.posrad.rad, \
-                       fill=None, outline="white", width=4)
+                       fill=None, outline="white", width=6)
 
 class Bullet:
   size=4
