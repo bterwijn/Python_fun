@@ -4,18 +4,18 @@ import random
 import math
 
 print("Two player game, bump balls in your goal to score. Keys:")
-print(" player1: 'z'        turn left")
-print(" player1: 'x'        turn right")
-print(" player1: 'f'        move forward")
-print(" player1: 'x'        brake")
-print(" player1: 'f'        shoot")
-print(" player2: ','        turn left")
-print(" player2: '.'        turn right")
-print(" player2: '''        move forward")
-print(" player2: '/'        brake")
-print(" player2: Return     shoot")
-print("Add an external keyboard in case key presses are ignored when")
-print("many keys are pressed simultaneously.")
+print(" player 1: 'z'        turn left")
+print("         : 'x'        turn right")
+print("         : 'f'        move forward")
+print("         : 'x'        brake")
+print("         : 'f'        shoot")
+print(" player 2: 'm'        turn left")
+print("         : ','        turn right")
+print("         : ';'        move forward")
+print("         : '.'        brake")
+print("         : '''        shoot")
+print("Some keyboards can't handle many simultaneously keystrokes.")
+print("Search for 'keyboard rollover' for details.")
 
 # globals
 root = tk.Tk()
@@ -296,15 +296,15 @@ def handle_keyboard_state():
     player1.speed.multipy(brake_factor)
   if keyboard.is_down("g"):
     player1.shoot()
-  if keyboard.is_down("comma"):
+  if keyboard.is_down("m"):
     player2.steer(-1)
-  if keyboard.is_down("period"):
+  if keyboard.is_down("comma"):
     player2.steer(+1)
-  if keyboard.is_down("apostrophe"):
+  if keyboard.is_down("semicolon"):
     player2.add_speed(Player.forward_speed)
-  if keyboard.is_down("slash"):
+  if keyboard.is_down("period"):
     player2.speed.multipy(brake_factor)
-  if keyboard.is_down("Return"):
+  if keyboard.is_down("apostrophe"):
     player2.shoot()
 
 def time_step():
