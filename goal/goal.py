@@ -14,8 +14,8 @@ print("         : ','        turn right")
 print("         : ';'        move forward")
 print("         : '.'        brake")
 print("         : '''        shoot")
-print("Some keyboards can't handle many simultaneously keystrokes.")
-print("Search for 'keyboard rollover' for details.")
+print("Some keyboards can't handle many simultaneous keystrokes.")
+print("Search 'keyboard rollover' for details.")
 
 # globals
 root = tk.Tk()
