@@ -2,16 +2,16 @@
 #   https://tkdocs.com/tutorial/index.html
 #   http://effbot.org/tkinterbook/canvas.htm
 #
-import tkinter as tk
+import tkinter
 import random
 
 print("Drag balls with mouse:")
 
-root = tk.Tk()
+root = tkinter.Tk()
 root.title("Elastics")  
 canvas_width=1000
 canvas_height=800
-canvas = tk.Canvas(root, width=canvas_width, height=canvas_height)
+canvas = tkinter.Canvas(root, width=canvas_width, height=canvas_height)
 canvas.config(bg="black")
 canvas.pack()
 canvas.focus_set()

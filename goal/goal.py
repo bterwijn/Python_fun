@@ -1,5 +1,5 @@
 # Goal game
-import tkinter as tk
+import tkinter
 import random
 import math
 
@@ -18,11 +18,11 @@ print("Some keyboards can't handle many simultaneous keystrokes.")
 print("Search 'keyboard rollover' for details.")
 
 # globals
-root = tk.Tk()
+root = tkinter.Tk()
 root.title("Goal")  
 canvas_width=1000
 canvas_height=800
-canvas = tk.Canvas(root, width=canvas_width, height=canvas_height)
+canvas = tkinter.Canvas(root, width=canvas_width, height=canvas_height)
 canvas.config(bg="black")
 canvas.pack()
 canvas.focus_set()
