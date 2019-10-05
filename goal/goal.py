@@ -93,16 +93,13 @@ def is_in_vertical_border_collision(obj):
 def is_in_horizontal_border_collision(obj):
   return obj.posrad.y<0 or obj.posrad.y>canvas.winfo_height()
 
-def square_distance(obj1,obj2):
-  dx=obj1.posrad.x - obj2.posrad.x   # difference in x
-  dy=obj1.posrad.y - obj2.posrad.y   # difference in y
-  return dx*dx+dy*dy                 # Pythagoras
-
 def is_in_collision(obj1,obj2):
-  sr=obj1.posrad.rad + obj2.posrad.rad    # sum of radia
-  return square_distance(obj1,obj2)<sr*sr # collision when distance is smaller than sum radia
+  dx=obj1.posrad.x   - obj2.posrad.x    # difference in x
+  dy=obj1.posrad.y   - obj2.posrad.y    # difference in y
+  sr=obj1.posrad.rad + obj2.posrad.rad  # sum of radia
+  return dx*dx+dy*dy<sr*sr              # collision when distance is smaller than sum radia
 
-def check_dynamic_collisions(obj1,obj_lists):
+def check_object_collisions(obj1,obj_lists):
   for obj_list in obj_lists:
     for obj2 in obj_list:
       if obj1!=obj2 and is_in_collision(obj1,obj2):
@@ -117,7 +114,7 @@ def check_border_collisions(obj):
   return (None,None)
 
 def check_collisions(obj1,obj_lists):
-  o1,o2=check_dynamic_collisions(obj1,obj_lists)
+  o1,o2=check_object_collisions(obj1,obj_lists)
   if o1==None:
     o1,o2=check_border_collisions(obj1)
   return (o1,o2)
@@ -177,14 +174,14 @@ class Player:
   def shoot(self):
     if time>self.last_shoot_time+Player.shoot_time:
       self.last_shoot_time=time
-      bx=math.cos(self.angle)
-      by=math.sin(self.angle)
+      bvx=math.cos(self.angle)
+      bvy=math.sin(self.angle)
       length=self.posrad.rad * Player.pointer_length
-      bullet=Bullet(self.posrad.x+bx*length, \
-                                 self.posrad.y+by*length, \
-                                 self.speed.x+bx*Player.bullet_speed, \
-                                 self.speed.y+by*Player.bullet_speed, \
-                                 self.color)
+      bullet=Bullet(self.posrad.x+bvx*length, \
+                    self.posrad.y+bvy*length, \
+                    self.speed.x+bvx*Player.bullet_speed, \
+                    self.speed.y+bvy*Player.bullet_speed, \
+                    self.color)
       bullets.append(bullet)
       check_and_handle_collisions(bullet,[players,balls])
 
@@ -213,29 +210,6 @@ class Ball:
     canvas.create_oval(self.posrad.x-self.posrad.rad, self.posrad.y-self.posrad.rad, \
                        self.posrad.x+self.posrad.rad, self.posrad.y+self.posrad.rad, \
                        fill=None, outline="white", width=6)
-
-class Bullet:
-  size=4
-  life_time=200
-
-  def __init__(self,x,y,vx,vy,color):
-    self.posrad=PosRad(x,y,Bullet.size)
-    self.speed=Speed(vx,vy)
-    self.color=color
-    self.time=0
-
-  def time_step(self):
-    self.time+=1
-    if self.time>Bullet.life_time:
-      bullets.remove(self)
-    else:
-      self.posrad.move(self.speed)
-      check_and_handle_collisions(self,[players,balls])
-
-  def draw(self):
-    canvas.create_oval(self.posrad.x-self.posrad.rad, self.posrad.y-self.posrad.rad, \
-                       self.posrad.x+self.posrad.rad, self.posrad.y+self.posrad.rad, \
-                       fill=None, outline=self.color, width=4)
 
 class Goal:
   initial_size=70
@@ -276,6 +250,29 @@ class Goal:
                          self.posrad.x+self.posrad.rad+t, self.posrad.y+self.posrad.rad+t, \
                          fill=None, outline="red", width=4)
 
+class Bullet:
+  size=4
+  life_time=200
+
+  def __init__(self,x,y,vx,vy,color):
+    self.posrad=PosRad(x,y,Bullet.size)
+    self.speed=Speed(vx,vy)
+    self.color=color
+    self.time=0
+
+  def time_step(self):
+    self.time+=1
+    if self.time>Bullet.life_time:
+      bullets.remove(self)
+    else:
+      self.posrad.move(self.speed)
+      check_and_handle_collisions(self,[players,balls])
+
+  def draw(self):
+    canvas.create_oval(self.posrad.x-self.posrad.rad, self.posrad.y-self.posrad.rad, \
+                       self.posrad.x+self.posrad.rad, self.posrad.y+self.posrad.rad, \
+                       fill=None, outline=self.color, width=4)
+      
 # globals
 keyboard=Keyboard()
 player1=Player(canvas_width*1/3,canvas_height/2,0      ,"blue")
@@ -285,7 +282,7 @@ players.append(player2)
 goals.append(Goal(             Goal.initial_size*3,canvas_height/2,"blue"))
 goals.append(Goal(canvas_width-Goal.initial_size*3,canvas_height/2,"green"))
 
-def handle_keyboard_state():
+def process_keyboard_state():
   if keyboard.is_down("z"):
     player1.steer(-1)
   if keyboard.is_down("x"):
@@ -310,7 +307,7 @@ def handle_keyboard_state():
 def time_step():
     global time
     canvas.delete("all") # remove all previous drawings
-    handle_keyboard_state()
+    process_keyboard_state()
     for obj_list in [goals,players,balls,bullets]:
       for obj in obj_list:
         obj.time_step()
@@ -338,6 +335,6 @@ def key_up(e):
 root.bind("<KeyPress>", key_down)
 root.bind("<KeyRelease>", key_up)
 root.update()
+add_balls(10) # add balls after the root window is created
 root.after(100, time_step)
-add_balls(10)
 root.mainloop()

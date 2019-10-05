@@ -101,29 +101,28 @@ class Star:
                        fill="white", outline="white")
   
 class Meteor:
+  min_size = 6
+  max_size = 18
   min_speed = 3
   max_speed = 9
-  min_size = 6
-  size = 10
   max_y_speed = 0.3
   
   def __init__(self, x, y):
-    self.speed_x = random.uniform(Meteor.min_speed, Meteor.max_speed)
-    self.speed_y = random.uniform(-Meteor.max_y_speed, Meteor.max_y_speed)
-    r = (self.speed_x - Meteor.min_speed) / (Meteor.max_speed - Meteor.min_speed)
-    self.posrad = PosRad(x, y, Meteor.min_size + Meteor.size - r * Meteor.size)
-    self.color = "green"
-
+    r = random.uniform(0, 1)
+    self.posrad = PosRad(x, y, Meteor.min_size + r * (Meteor.max_size - Meteor.min_size ) )
+    self.vx = Meteor.min_speed + r * (Meteor.max_speed - Meteor.min_speed)
+    self.vy = random.uniform(-Meteor.max_y_speed, Meteor.max_y_speed)
+    
   def time_step(self):
-    self.posrad.x -= self.speed_x
-    self.posrad.y -= self.speed_y
+    self.posrad.x -= self.vx
+    self.posrad.y -= self.vy
     if self.posrad.x<0:
       meteors.remove(self)
     
   def draw(self):
     canvas.create_oval(self.posrad.x-self.posrad.rad, self.posrad.y-self.posrad.rad, \
                        self.posrad.x+self.posrad.rad, self.posrad.y+self.posrad.rad, \
-                       fill=self.color, outline="white")
+                       fill="green", outline="white")
     
   def is_in_laser(self, x, y):
     return self.posrad.y+self.posrad.rad > y and \
