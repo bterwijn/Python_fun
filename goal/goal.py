@@ -275,34 +275,32 @@ class Bullet:
       
 # globals
 keyboard=Keyboard()
-player1=Player(canvas_width*1/3,canvas_height/2,0      ,"blue")
-player2=Player(canvas_width*2/3,canvas_height/2,math.pi,"green")
-players.append(player1)
-players.append(player2)
+players.append(Player(canvas_width*1/3,canvas_height/2,0      ,"blue"))
+players.append(Player(canvas_width*2/3,canvas_height/2,math.pi,"green"))
 goals.append(Goal(             Goal.initial_size*3,canvas_height/2,"blue"))
 goals.append(Goal(canvas_width-Goal.initial_size*3,canvas_height/2,"green"))
 
 def process_keyboard_state():
   if keyboard.is_down("z"):
-    player1.steer(-1)
+    players[0].steer(-1)
   if keyboard.is_down("x"):
-    player1.steer(+1)
+    players[0].steer(+1)
   if keyboard.is_down("f"):
-    player1.add_speed(Player.forward_speed)
+    players[0].add_speed(Player.forward_speed)
   if keyboard.is_down("c"):
-    player1.speed.multipy(brake_factor)
+    players[0].speed.multipy(brake_factor)
   if keyboard.is_down("g"):
-    player1.shoot()
+    players[0].shoot()
   if keyboard.is_down("m"):
-    player2.steer(-1)
+    players[1].steer(-1)
   if keyboard.is_down("comma"):
-    player2.steer(+1)
+    players[1].steer(+1)
   if keyboard.is_down("semicolon"):
-    player2.add_speed(Player.forward_speed)
+    players[1].add_speed(Player.forward_speed)
   if keyboard.is_down("period"):
-    player2.speed.multipy(brake_factor)
+    players[1].speed.multipy(brake_factor)
   if keyboard.is_down("apostrophe"):
-    player2.shoot()
+    players[1].shoot()
 
 def time_step():
     global time
