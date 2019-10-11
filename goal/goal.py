@@ -35,6 +35,7 @@ class Keyboard:
 
 class Globals:
   root = tkinter.Tk()
+  root.title("Goal")  
   canvas_width=1000
   canvas_height=800
   canvas = tkinter.Canvas(root, width=canvas_width, height=canvas_height)
@@ -47,6 +48,11 @@ class Globals:
   bullets=[]
   goals=[]
   keyboard=Keyboard()
+
+def polar_to_cartesian(angle, distance):
+  cx = math.cos(angle) * distance
+  cy = math.sin(angle) * distance
+  return cx,cy
   
 class Speed:
   air_resistance=0.98
@@ -56,8 +62,9 @@ class Speed:
     self.y=vy
 
   def add_polar(self,angle,size):
-    self.x+=math.cos(angle)*size
-    self.y+=math.sin(angle)*size
+    cx,cy=polar_to_cartesian(angle,size)
+    self.x+=cx
+    self.y+=cy
 
   def air_resits(self):
     self.x*=Speed.air_resistance
@@ -177,25 +184,24 @@ class Player:
   def shoot(self):
     if Globals.time>self.last_shoot_time+Player.shoot_time:
       self.last_shoot_time=Globals.time
-      bvx=math.cos(self.angle)
-      bvy=math.sin(self.angle)
+      bvx,bvy=polar_to_cartesian(self.angle,1)
       length=self.posrad.rad * Player.pointer_length
-      bullet=Bullet(self.posrad.x+bvx*length, \
-                    self.posrad.y+bvy*length, \
-                    self.speed.x+bvx*Player.bullet_speed, \
-                    self.speed.y+bvy*Player.bullet_speed, \
+      bullet=Bullet(self.posrad.x + bvx*length, \
+                    self.posrad.y + bvy*length, \
+                    self.speed.x  + bvx*Player.bullet_speed, \
+                    self.speed.y  + bvy*Player.bullet_speed, \
                     self.color)
       Globals.bullets.append(bullet)
       check_and_handle_collisions(bullet,[Globals.players,Globals.balls])
 
   def draw(self):
     Globals.canvas.create_oval(self.posrad.x-self.posrad.rad, self.posrad.y-self.posrad.rad, \
-                       self.posrad.x+self.posrad.rad, self.posrad.y+self.posrad.rad, \
-                       fill=None, outline=self.color, width=6)
-    length=self.posrad.rad * Player.pointer_length
+                               self.posrad.x+self.posrad.rad, self.posrad.y+self.posrad.rad, \
+                               fill=None, outline=self.color, width=6)
+    cx,cy=polar_to_cartesian(self.angle, self.posrad.rad * Player.pointer_length)
     Globals.canvas.create_line(self.posrad.x,                               self.posrad.y,                               \
-                       self.posrad.x + math.cos(self.angle)*length, self.posrad.y + math.sin(self.angle)*length, \
-                       fill=self.color, width=6)
+                               self.posrad.x + cx, self.posrad.y + cy, \
+                               fill=self.color, width=6)
 
 class Ball:
   size=10
@@ -211,8 +217,8 @@ class Ball:
 
   def draw(self):
     Globals.canvas.create_oval(self.posrad.x-self.posrad.rad, self.posrad.y-self.posrad.rad, \
-                       self.posrad.x+self.posrad.rad, self.posrad.y+self.posrad.rad, \
-                       fill=None, outline="white", width=6)
+                               self.posrad.x+self.posrad.rad, self.posrad.y+self.posrad.rad, \
+                               fill=None, outline="white", width=6)
 
 class Goal:
   initial_size=70
