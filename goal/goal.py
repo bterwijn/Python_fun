@@ -17,6 +17,11 @@ print("         : '''        shoot")
 print("Some keyboards can't handle many simultaneous keystrokes.")
 print("Search 'keyboard rollover' for details.")
 
+def polar_to_cartesian(angle, distance):
+  cx = math.cos(angle) * distance
+  cy = math.sin(angle) * distance
+  return cx,cy
+
 class Keyboard:
 
   def __init__(self):
@@ -48,11 +53,6 @@ class Globals:
   bullets=[]
   goals=[]
   keyboard=Keyboard()
-
-def polar_to_cartesian(angle, distance):
-  cx = math.cos(angle) * distance
-  cy = math.sin(angle) * distance
-  return cx,cy
   
 class Speed:
   air_resistance=0.98
