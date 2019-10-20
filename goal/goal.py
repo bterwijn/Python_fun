@@ -112,44 +112,39 @@ def check_object_collisions(obj1,obj_lists):
         return (obj1,obj2)
   return (None,None)
 
-def check_border_collisions(obj):
-  if is_in_horizontal_border_collision(obj):
-    return (obj,"Horizontal_Border")
-  if is_in_vertical_border_collision(obj):
-    return (obj,"Vertical_Border")
-  return (None,None)
-
-def check_collisions(obj1,obj_lists):
-  o1,o2=check_object_collisions(obj1,obj_lists)
-  if o1==None:
-    o1,o2=check_border_collisions(obj1)
-  return (o1,o2)
-
 def is_collision_free(obj1,obj_lists):
-  o1,o2=check_collisions(obj1,obj_lists)
-  return o1==None
+  o1,o2=check_object_collisions(obj1,obj_lists)
+  if not o1 is None:
+    return False
+  if is_in_vertical_border_collision(obj1) or \
+     is_in_horizontal_border_collision(obj1):
+    return False
+  return True
 
 def check_and_handle_collisions(obj1,obj_lists):
-  o1,o2=check_collisions(obj1,obj_lists)
+  if is_in_vertical_border_collision(obj1):
+    obj1.posrad.move(obj1.speed,-1)
+    obj1.speed.x*=-1;
+    return True
+  if is_in_horizontal_border_collision(obj1):
+    obj1.posrad.move(obj1.speed,-1)
+    obj1.speed.y*=-1;
+    return True
+  o1,o2=check_object_collisions(obj1,obj_lists)
   if o1!=None:
     o1.posrad.move(o1.speed,-1)
-    if o2=="Horizontal_Border":
-      o1.speed.y*=-1;
-    elif o2=="Vertical_Border":
-      o1.speed.x*=-1;
-    else:
-      speed_swap(o1,o2)
-      if o1.__class__.__name__=="Ball" and \
-         o2.__class__.__name__=="Goal":
-        o2.score()
-        if o1 in Globals.balls:
-          Globals.balls.remove(o1)
-      if o1.__class__.__name__=="Bullet":
-        if o1 in Globals.bullets:
-          Globals.bullets.remove(o1)
-      if o2.__class__.__name__=="Bullet":
-        if o2 in Globals.bullets:
-          Globals.bullets.remove(o2)
+    speed_swap(o1,o2)
+    if o1.__class__.__name__=="Ball" and \
+       o2.__class__.__name__=="Goal":
+      o2.score()
+      if o1 in Globals.balls:
+        Globals.balls.remove(o1)
+    if o1.__class__.__name__=="Bullet":
+      if o1 in Globals.bullets:
+        Globals.bullets.remove(o1)
+    if o2.__class__.__name__=="Bullet":
+      if o2 in Globals.bullets:
+        Globals.bullets.remove(o2)
 
 class Player:
   init_size=20
@@ -197,9 +192,9 @@ class Player:
     Globals.canvas.create_oval(self.posrad.x-self.posrad.rad, self.posrad.y-self.posrad.rad, \
                                self.posrad.x+self.posrad.rad, self.posrad.y+self.posrad.rad, \
                                fill=None, outline=self.color, width=6)
-    cx,cy=polar_to_cartesian(self.angle, Player.pointer_length)
+    px,py=polar_to_cartesian(self.angle, Player.pointer_length)
     Globals.canvas.create_line(self.posrad.x,      self.posrad.y,      \
-                               self.posrad.x + cx, self.posrad.y + cy, \
+                               self.posrad.x + px, self.posrad.y + py, \
                                fill=self.color, width=6)
 
 class Ball:
