@@ -87,22 +87,24 @@ def mouse_motion(event):
     Globals.mouse_holds_ball.y=event.y
   
 def time_step():
-    Globals.canvas.delete("all") # remove all previous drawings
-    Globals.time+=1
-    move_balls()
-    draw_balls()
-    Globals.root.after(10, time_step)
-
+  Globals.canvas.delete("all") # remove all previous drawings
+  Globals.time+=1
+  move_balls()
+  draw_balls()
+  Globals.root.after(10, time_step)
+    
+def add_balls(n):
+  for i in range(n):
+    Globals.balls.append(Ball(i*Globals.canvas_width/(n-1), Globals.canvas_height*1/3))
+ 
 def main():
   Globals.root.update()
   Globals.root.bind('<Button>',mouse_button)
   Globals.root.bind('<ButtonRelease>',mouse_release)
   Globals.root.bind('<Motion>',mouse_motion)
 
-  nr_balls=20
-  for i in range(nr_balls):
-    Globals.balls.append(Ball(i*Globals.canvas_width/(nr_balls-1), Globals.canvas_height*1/3))
-    
+  add_balls(20)
+  
   Globals.root.after(100, time_step)
   Globals.root.mainloop()
 
