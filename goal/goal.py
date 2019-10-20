@@ -153,7 +153,7 @@ def check_and_handle_collisions(obj1,obj_lists):
 
 class Player:
   init_size=20
-  pointer_length=1.8
+  pointer_length=36
   steer_speed=0.05
   forward_speed=0.20
   brake_factor=0.97
@@ -185,11 +185,10 @@ class Player:
     if Globals.time>self.last_shoot_time+Player.shoot_time:
       self.last_shoot_time=Globals.time
       bvx,bvy=polar_to_cartesian(self.angle,1)
-      length=self.posrad.rad * Player.pointer_length
-      bullet=Bullet(self.posrad.x + bvx*length, \
-                    self.posrad.y + bvy*length, \
-                    self.speed.x  + bvx*Player.bullet_speed, \
-                    self.speed.y  + bvy*Player.bullet_speed, \
+      bullet=Bullet(self.posrad.x + bvx * Player.pointer_length, \
+                    self.posrad.y + bvy * Player.pointer_length, \
+                    self.speed.x  + bvx * Player.bullet_speed, \
+                    self.speed.y  + bvy * Player.bullet_speed, \
                     self.color)
       Globals.bullets.append(bullet)
       check_and_handle_collisions(bullet,[Globals.players,Globals.balls])
@@ -198,8 +197,8 @@ class Player:
     Globals.canvas.create_oval(self.posrad.x-self.posrad.rad, self.posrad.y-self.posrad.rad, \
                                self.posrad.x+self.posrad.rad, self.posrad.y+self.posrad.rad, \
                                fill=None, outline=self.color, width=6)
-    cx,cy=polar_to_cartesian(self.angle, self.posrad.rad * Player.pointer_length)
-    Globals.canvas.create_line(self.posrad.x,                               self.posrad.y,                               \
+    cx,cy=polar_to_cartesian(self.angle, Player.pointer_length)
+    Globals.canvas.create_line(self.posrad.x,      self.posrad.y,      \
                                self.posrad.x + cx, self.posrad.y + cy, \
                                fill=self.color, width=6)
 
