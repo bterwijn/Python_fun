@@ -53,7 +53,7 @@ def move_balls():
     fx=Globals.balls[i-1].x-b.x + Globals.balls[i+1].x-b.x
     fy=Globals.balls[i-1].y-b.y + Globals.balls[i+1].y-b.y
     fy+=gravity
-    if not b is Globals.mouse_holds_ball:
+    if True:#not b is Globals.mouse_holds_ball:
       b.vx+= fx*force
       b.vy+= fy*force
       b.x+= b.vx
