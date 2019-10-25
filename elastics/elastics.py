@@ -50,10 +50,10 @@ def move_balls():
   air_resistance=0.9
   for i in range(1,len(Globals.balls)-1):
     b=Globals.balls[i]
-    fx=Globals.balls[i-1].x-b.x + Globals.balls[i+1].x-b.x
-    fy=Globals.balls[i-1].y-b.y + Globals.balls[i+1].y-b.y
-    fy+=gravity
-    if True:#not b is Globals.mouse_holds_ball:
+    if not b is Globals.mouse_holds_ball:
+      fx=Globals.balls[i-1].x-b.x + Globals.balls[i+1].x-b.x
+      fy=Globals.balls[i-1].y-b.y + Globals.balls[i+1].y-b.y
+      fy+=gravity
       b.vx+= fx*force
       b.vy+= fy*force
       b.x+= b.vx
